@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IGCGMusic – Criar conta</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;700;800&display=swap">
+<style>
+:root{
+  --bg:#0b111b; --card:#161c26; --card2:#181d26; --line:#262e3b;
+  --olive:#555e48; --olive2:#454d3a; --green:#04d361; --ink:#03200e;
+  --text:#fff; --muted:#9aa3b2; --field:#e8effc;
+  --head:"Lexend","Segoe UI",Arial,sans-serif; --body:"Segoe UI",Roboto,Arial,sans-serif;
+  color-scheme:dark; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0b111b}}
+:root[data-theme="dark"]{--bg:#0b111b}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:#05080d;color:var(--text);font-family:var(--body);display:flex;justify-content:center;align-items:center}
+button{font-family:inherit;color:inherit}
+.app{position:relative;width:100%;max-width:430px;height:100%;max-height:920px;background:var(--bg);overflow:hidden}
+@media (min-width:480px){.app{border-radius:32px;border:1px solid var(--line);height:min(920px,96vh)}}
+.screen{display:none;height:100%;overflow-y:auto;flex-direction:column}
+.screen.on{display:flex;animation:in .28s ease}
+@keyframes in{from{opacity:0;transform:translateY(14px)}}
+@media (prefers-reduced-motion:reduce){.screen.on,.track{animation:none}}
+.pad{padding:18px 20px 22px}
+.hide{display:none!important}
+
+/* comum */
+.logo{width:42px;height:42px;border-radius:50%;background:var(--olive2);display:grid;place-items:center;flex:none}
+.logo svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:14px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;background:transparent}
+.btn.go{background:var(--green);color:#fff;box-shadow:0 8px 22px rgba(4,211,97,.25)}
+.btn.go:disabled{opacity:.4;box-shadow:none;cursor:not-allowed}
+.btn.go:active{transform:scale(.98)}
+.btn.line{border:1.5px solid var(--line);background:var(--card);border-radius:99px;font-family:var(--head)}
+.btn.pill{border-radius:99px;font-family:var(--head)}
+.btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.back{background:rgba(0,0,0,.25);border:0;width:40px;height:40px;border-radius:50%;font-size:22px;cursor:pointer;color:#fff}
+.badge{display:inline-block;background:var(--green);color:var(--ink);font-size:10.5px;font-weight:800;letter-spacing:1px;padding:4px 10px;border-radius:99px}
+.card{background:var(--card2);border-radius:28px;padding:22px 20px 22px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;margin-bottom:8px}
+.inp{display:flex;align-items:center;background:var(--field);border-radius:12px;min-height:48px;border:2px solid transparent}
+.inp:focus-within{border-color:var(--green)}
+.inp.bad{border-color:#ff6b6b}
+.inp input{flex:1;min-width:0;background:none;border:0;outline:none;color:#0b0e15;font-size:16px;padding:13px 14px 13px 0;font-family:var(--body)}
+.inp input::placeholder{color:#7b8494}
+.ic{width:20px;height:20px;margin:0 12px 0 14px;flex:none;fill:none;stroke:#8a93a3;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.eye{background:none;border:0;color:#6b7482;font-size:13px;font-weight:600;padding:0 14px;cursor:pointer}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.err{color:#ff7a7a;font-size:13px;min-height:18px;margin:2px 0 10px}
+.sep{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px;margin:22px 0 16px}
+.sep:before,.sep:after{content:"";flex:1;height:1px;background:var(--line)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.soc{font-weight:600;font-size:14px;padding:13px;background:var(--card);border:1px solid var(--line)}
+.soc svg{fill:initial;stroke:none}
+.switch{text-align:center;color:var(--muted);font-size:14px;margin-top:22px}
+.switch button{background:none;border:0;color:var(--green);font-weight:700;font-size:14px;cursor:pointer}
+.legal{color:var(--muted);font-size:12px;line-height:1.5;text-align:center;margin-top:16px}
+.legal a{color:var(--text)}
+
+/* boas-vindas */
+.brand{display:flex;align-items:center;gap:12px}
+.brand b{font-family:var(--head);font-weight:800;font-size:20px}
+.preview{flex:1 1 auto;min-height:130px;margin:14px -20px 0;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,#000 22%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 22%,#000 70%,transparent)}
+.track{display:flex;flex-direction:column;gap:10px;padding:0 20px;animation:sc 28s linear infinite}
+@keyframes sc{to{transform:translateY(-50%)}}
+.row{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:16px;padding:10px 14px}
+.row .n{width:20px;color:var(--muted);font-weight:700;font-size:13px}
+.cov{width:44px;height:44px;border-radius:8px;flex:none}
+.row .t{flex:1;min-width:0}.row strong{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row small,.row time{color:var(--muted);font-size:12px}
+.hero{background:var(--olive);border-radius:24px;padding:20px}
+.hero h1{font-family:var(--head);font-weight:800;font-size:25px;line-height:1.15;letter-spacing:-.4px;margin:10px 0 8px}
+.hero p{font-size:14px;line-height:1.45;color:#e6eadf}
+.actions{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.link{display:block;background:none;border:0;color:var(--muted);font-size:14px;margin:14px auto 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* LOGIN: cabeçalho oliva com ondas sonoras */
+.top{position:relative;background:linear-gradient(160deg,#667158,#434b38);padding:18px 20px 62px;border-radius:0 0 36px 36px;overflow:hidden}
+.top .bars{position:absolute;right:-6px;bottom:0;width:190px;height:120px;opacity:.16}
+.top .logo{width:64px;height:64px;margin:22px 0 16px;background:rgba(0,0,0,.28)}
+.top .logo svg{width:32px;height:32px}
+.top h2{font-family:var(--head);font-weight:800;font-size:28px;letter-spacing:-.5px}
+.top p{color:#e1e6d8;font-size:14.5px;margin-top:6px}
+.float{margin:-34px 20px 0;position:relative}
+.forgot{display:block;background:none;border:0;color:#aab2bf;font-weight:700;font-size:13px;padding:0;cursor:pointer;margin:-4px 0 14px}
+.remember{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:6px}
+
+/* CADASTRO: cabeçalho escuro, vantagens e medidor de senha */
+.su-head{display:flex;align-items:center;gap:12px}
+.step{flex:1;height:4px;border-radius:4px;background:var(--line);overflow:hidden}.step i{display:block;width:100%;height:100%;background:var(--green)}
+.su h2{font-family:var(--head);font-weight:800;font-size:28px;letter-spacing:-.5px;margin:18px 0 6px}
+.su .lead{color:var(--muted);font-size:14.5px;line-height:1.45}
+.perks{display:flex;gap:8px;margin:16px 0 18px;overflow-x:auto;scrollbar-width:none}
+.perk{display:flex;align-items:center;gap:8px;white-space:nowrap;background:var(--olive);border-radius:99px;padding:9px 14px 9px 10px;font-size:13px;font-weight:600}
+.perk svg{width:16px;height:16px;fill:none;stroke:#7dffb0;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.meter{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:9px}
+.meter i{height:4px;border-radius:4px;background:#2d3644}
+.meter i.on{background:var(--c)}
+.terms{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);line-height:1.4;margin:4px 0 16px}
+input[type=checkbox]{accent-color:#04d361;width:18px;height:18px;margin-top:1px;flex:none}
+.terms a,.remember a{color:var(--text)}
+
+/* destino */
+.done{align-items:center;justify-content:center;text-align:center;gap:14px;padding:20px}
+.done .logo{width:72px;height:72px}.done .logo svg{width:36px;height:36px}
+.done h2{font-family:var(--head)}.done p{color:var(--muted);max-width:280px}
+.done .btn{width:auto;padding:12px 22px;font-size:14px}
+
+.toast{position:absolute;left:20px;right:20px;bottom:24px;background:#0c0f15;border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:14px;opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none;z-index:5}
+.toast.on{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<main class="app">
+<svg width="0" height="0" style="position:absolute"><symbol id="hp" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></symbol></svg>
+<!-- CRIAR CONTA -->
+<section class="screen su pad on" id="signup">
+  <div class="su-head"><button class="back" data-go="welcome" aria-label="Voltar" style="background:var(--card)">‹</button><div class="step"><i></i></div></div>
+  <span class="badge" style="align-self:flex-start;margin-top:18px">NOVIDADE</span>
+  <h2 style="margin-top:10px">Crie sua conta</h2>
+  <p class="lead">Leva menos de um minuto e é grátis.</p>
+  <div class="perks">
+    <span class="perk"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>Favoritos</span>
+    <span class="perk"><svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>Mix Personalizado</span>
+    <span class="perk"><svg viewBox="0 0 24 24"><path d="M3 6h13M3 12h13M3 18h9M19 14v6M16 17h6"/></svg>Playlists</span>
+  </div>
+  <div class="card">
+    <div id="sf"></div>
+    <div class="meter" id="meter"><i></i><i></i><i></i><i></i></div><div class="hint" id="mt" style="margin:6px 0 16px">Use 6+ caracteres, com números e letras.</div>
+    <label class="terms"><input type="checkbox" id="terms"><span>Li e concordo com os <a href="#">Termos de Uso</a> e a <a href="#">Política de Privacidade</a>.</span></label>
+    <div class="err" id="serr"></div>
+    <button class="btn go" id="ssub" disabled>Criar conta <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+  </div>
+  <div class="sep">ou cadastre-se com</div>
+  <div class="split" id="ssoc"></div>
+  <p class="switch">Já tem uma conta? <button data-go="login">Entrar</button></p>
+</section>
+
+<div class="toast" id="toast"></div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let tt; const toast = m => { let t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2600); };
+const finish = m => toast(m);
+const NAV = {welcome:'Volta para a tela de boas-vindas (no app).', signup:'Abre a tela de Criar conta (no app).', login:'Abre a tela de Login (no app).'};
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => toast(NAV[b.dataset.go]));
+const IC = {
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  mail:'<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  lock:'<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
+};
+const field = (id, label, ic, type, ph, ac, pw) => `<div class="field"><label for="${id}">${label}</label><div class="inp" id="w_${id}"><svg class="ic" viewBox="0 0 24 24">${IC[ic]}</svg><input id="${id}" type="${type}" placeholder="${ph}" autocomplete="${ac}">${pw ? '<button class="eye" type="button" data-eye="'+id+'">Mostrar</button>' : ''}</div></div>`;
+$('sf').innerHTML = field('suser','Usuário','user','text','Escolha um usuário','username') + field('smail','E-mail','mail','email','voce@exemplo.com','email') + field('spw','Senha','lock','password','Mínimo 6 caracteres','new-password',1) .replace('class="field"','class="field" style="margin-bottom:0"') + '<div style="height:16px"></div>' + field('spw2','Confirmar senha','lock','password','Repita a senha','new-password',1);
+const soc = `<button class="btn soc" data-p="Google"><svg viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3-3C17.3 1.8 14.8.8 12 .8 7.7.8 4 3.3 2.2 6.9l3.5 2.7C6.6 7.1 9.1 5 12 5z"/><path fill="#4285F4" d="M23.2 12.3c0-.8-.1-1.5-.2-2.2H12v4.3h6.3c-.3 1.4-1.1 2.6-2.3 3.4l3.5 2.7c2.1-1.9 3.7-4.7 3.7-8.2z"/><path fill="#FBBC05" d="M5.7 14.3c-.2-.6-.3-1.2-.3-1.9s.1-1.3.3-1.9L2.2 7.8C1.5 9.2 1.1 10.7 1.1 12.4s.4 3.2 1.1 4.6l3.5-2.7z"/><path fill="#34A853" d="M12 24c3.2 0 5.900-1.100 7.900-2.900l-3.500-2.700c-1 .7-2.400 1.100-4.400 1.100-2.900 0-5.400-2-6.300-4.600L2.200 17.700C4 21.200 7.700 24 12 24z"/></svg>Google</button><button class="btn soc" data-p="Facebook"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1877F2"/><path fill="#fff" d="M13.5 22v-8h2.7l.4-3.200h-3.100V8.800c0-.9.3-1.500 1.600-1.500h1.700V4.400c-.3 0-1.300-.1-2.400-.1-2.400 0-4 1.500-4 4.100v2.400H7.700V14h2.700v8z"/></svg>Facebook</button>`;
+$('ssoc').innerHTML = soc;
+document.querySelectorAll('.soc').forEach(b => b.onclick = () => finish('Cadastro com ' + b.dataset.p + ' (integração a conectar).'));
+document.addEventListener('click', e => { const id = e.target.dataset && e.target.dataset.eye; if (!id) return; const i = $(id), h = i.type === 'password'; i.type = h ? 'text' : 'password'; e.target.textContent = h ? 'Ocultar' : 'Mostrar'; });
+const mailOk = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+const bad = (id, on) => $('w_'+id).classList.toggle('bad', on);
+const score = p => (p.length >= 6) + (p.length >= 10) + (/\d/.test(p) && /[a-zA-Z]/.test(p)) + (/[^a-zA-Z0-9]/.test(p) || (/[A-Z]/.test(p) && /[a-z]/.test(p) && p.length >= 8));
+const lv = [['#ff6b6b','Muito fraca'],['#ff6b6b','Fraca'],['#f0b429','Média'],['#4ade80','Boa'],['#04d361','Forte']];
+function scheck(){
+  const u = $('suser').value.trim(), m = $('smail').value.trim(), p = $('spw').value, p2 = $('spw2').value;
+  const sc = p ? score(p) : 0, [c, t] = lv[sc];
+  $('meter').style.setProperty('--c', c);
+  [...$('meter').children].forEach((el, i) => el.classList.toggle('on', i < sc));
+  $('mt').textContent = p ? 'Senha: ' + t : 'Use 6+ caracteres, com números e letras.';
+  bad('smail', !!m && !mailOk(m)); bad('spw2', !!p2 && p2 !== p);
+  const ok = /^[\w.]{3,}$/.test(u) && mailOk(m) && p.length >= 6 && p === p2 && $('terms').checked;
+  $('ssub').disabled = !ok;
+  $('serr').textContent = p2 && p2 !== p ? 'As senhas não coincidem.' : '';
+}
+['suser','smail','spw','spw2','terms'].forEach(i => $(i).oninput = $(i).onchange = scheck);
+$('ssub').onclick = () => finish('Conta criada para ' + $('smail').value.trim() + ' (integração a conectar).');
+
+</script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IGCGMusic – Boas-vindas</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@600;800&display=swap">
+<style>
+:root{
+  --bg:#0b111b; --card:#161c26; --card-2:#1d2430; --line:#262e3b;
+  --olive:#555e48; --olive-2:#454d3a;
+  --green:#10c85a; --green-ink:#03200e;
+  --text:#ffffff; --muted:#9aa3b2;
+  --head:"Lexend","Segoe UI",Arial,sans-serif;
+  --body:"Segoe UI",Roboto,Arial,sans-serif;
+  color-scheme:dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0b111b}}
+:root[data-theme="dark"]{--bg:#0b111b}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:#05080d;color:var(--text);font-family:var(--body);display:flex;justify-content:center;align-items:center}
+.app{position:relative;width:100%;max-width:430px;height:100%;max-height:920px;background:var(--bg);overflow:hidden}
+@media (min-width:480px){.app{border-radius:32px;border:1px solid var(--line);height:min(920px,96vh)}}
+.screen{display:none;flex-direction:column;height:100%;padding:18px 20px 20px}
+.screen.on{display:flex}
+
+/* marca */
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:50%;background:var(--olive-2);display:grid;place-items:center;color:#fff}
+.logo svg{width:22px;height:22px}
+.brand b{font-family:var(--head);font-weight:800;font-size:20px;letter-spacing:-.3px}
+
+/* prévia: lista de hinos rolando, no estilo das linhas do app */
+.preview{position:relative;flex:1 1 auto;min-height:150px;margin:14px -20px 0;overflow:hidden;
+  -webkit-mask-image:linear-gradient(transparent,#000 22%,#000 70%,transparent);
+  mask-image:linear-gradient(transparent,#000 22%,#000 70%,transparent)}
+.track{display:flex;flex-direction:column;gap:10px;padding:0 20px;animation:scroll 28s linear infinite}
+@keyframes scroll{to{transform:translateY(-50%)}}
+@media (prefers-reduced-motion:reduce){.track{animation:none}}
+.row{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:16px;padding:10px 14px}
+.row .n{width:20px;color:var(--muted);font-weight:700;font-size:13px}
+.cov{width:44px;height:44px;border-radius:8px;flex:none}
+.row div.t{flex:1;min-width:0}
+.row strong{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row small{color:var(--muted);font-size:12px}
+.row time{color:var(--muted);font-size:12px}
+
+/* bloco de apresentação (card oliva, como o "Novidade" do app) */
+.hero{background:var(--olive);border-radius:24px;padding:20px 20px 18px;margin-top:6px}
+.badge{display:inline-block;background:var(--green);color:var(--green-ink);font-size:10.5px;font-weight:800;letter-spacing:1px;padding:4px 10px;border-radius:99px}
+h1{font-family:var(--head);font-weight:800;font-size:25px;line-height:1.15;letter-spacing:-.4px;margin:10px 0 8px}
+.hero p{font-size:14px;line-height:1.45;color:#e6eadf}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:99px;padding:15px;font-size:16px;font-weight:700;font-family:var(--head);cursor:pointer;color:var(--text);background:transparent}
+.btn.green{background:var(--green);color:var(--green-ink);box-shadow:0 6px 20px rgba(16,200,90,.28)}
+.btn.green:active{transform:scale(.98)}
+.btn.green:disabled{opacity:.4;box-shadow:none;cursor:not-allowed}
+.btn.line{border:1.5px solid var(--line);background:var(--card)}
+.actions{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn.soc{font-family:var(--body);font-weight:600;font-size:14px;padding:12px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.btn.soc svg{width:18px;height:18px}
+.link{background:none;border:0;color:var(--muted);font-size:14px;margin:14px auto 0;cursor:pointer;font-family:var(--body);text-decoration:underline;text-underline-offset:3px}
+.link:hover{color:var(--text)}
+
+/* formulário */
+.back{background:var(--card);border:0;color:var(--text);width:40px;height:40px;border-radius:50%;font-size:22px;cursor:pointer}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border-radius:99px;padding:4px;margin:22px 0 20px}
+.tabs button{border:0;background:none;color:var(--muted);padding:11px;border-radius:99px;font-family:var(--head);font-weight:600;font-size:14px;cursor:pointer}
+.tabs button.on{background:var(--olive);color:#fff}
+.form h2{font-family:var(--head);font-weight:800;font-size:26px;letter-spacing:-.4px}
+.form .sub{color:var(--muted);font-size:14px;margin-top:6px}
+.field{margin-top:16px}
+.field label{display:block;color:var(--muted);font-size:12.5px;margin-bottom:7px}
+.inp{display:flex;background:var(--card);border:1.5px solid var(--line);border-radius:14px}
+.inp:focus-within{border-color:var(--green)}
+.inp input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--text);font-size:16px;padding:14px;font-family:var(--body)}
+.eye{background:none;border:0;color:var(--muted);padding:0 14px;cursor:pointer;font-size:13px;font-family:var(--body)}
+.err{color:#ff7a7a;font-size:13px;min-height:18px;margin:10px 0 6px}
+.hide{display:none!important}
+.forgot{align-self:flex-end;font-size:13px;color:var(--green);margin-top:10px;background:none;border:0;cursor:pointer;font-family:var(--body)}
+.legal{color:var(--muted);font-size:12px;line-height:1.5;text-align:center;margin-top:auto;padding-top:16px}
+.legal a{color:var(--text)}
+
+/* destino (placeholder) */
+.done{align-items:center;justify-content:center;text-align:center;gap:14px}
+.done .logo{width:72px;height:72px}.done .logo svg{width:36px;height:36px}
+.done h2{font-family:var(--head)}
+.done p{color:var(--muted);max-width:280px}
+.done .btn{width:auto;padding:12px 22px;font-size:14px}
+</style>
+</head>
+<body>
+<main class="app">
+<svg width="0" height="0" style="position:absolute"><symbol id="hp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></symbol></svg>
+
+<!-- 1. Boas-vindas -->
+<section class="screen on" id="welcome">
+  <div class="brand"><span class="logo"><svg><use href="#hp"/></svg></span><b>IGCGMusic</b></div>
+
+  <div class="preview" aria-hidden="true"><div class="track" id="track"></div></div>
+
+  <div class="hero">
+    <span class="badge">HINOS • LETRAS • CIFRAS</span>
+    <h1>Seu IGCGMusic 100% personalizado</h1>
+    <p>Crie sua conta para ouvir seus hinos favoritos, ter seu Mix Personalizado e organizar suas playlists.</p>
+  </div>
+
+  <div class="actions">
+    <button class="btn green" id="toSignup">Criar minha conta</button>
+    <button class="btn line" id="toLogin">Já tenho conta</button>
+  </div>
+  <button class="link" id="guest">Explorar sem conta</button>
+</section>
+
+<!-- 2. Entrar / Criar conta -->
+<section class="screen form" id="form">
+  <div><button class="back" id="back" aria-label="Voltar">‹</button></div>
+  <div class="tabs" role="tablist">
+    <button id="tSignup" class="on">Criar conta</button>
+    <button id="tLogin">Entrar</button>
+  </div>
+  <h2 id="fTitle">Crie sua conta</h2>
+  <p class="sub" id="fSub">Leva menos de um minuto. É grátis.</p>
+
+  <div class="field" id="nameField"><label for="name">Nome</label><div class="inp"><input id="name" autocomplete="name" placeholder="Como podemos te chamar?"></div></div>
+  <div class="field"><label for="email">E-mail</label><div class="inp"><input id="email" type="email" autocomplete="email" placeholder="voce@exemplo.com"></div></div>
+  <div class="field"><label for="pw">Senha</label><div class="inp"><input id="pw" type="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres"><button class="eye" id="eye" type="button">Mostrar</button></div></div>
+  <button class="forgot hide" id="forgot">Esqueci minha senha</button>
+  <div class="err" id="err"></div>
+  <button class="btn green" id="submit" disabled>Criar conta</button>
+
+  <div class="split" style="margin-top:14px">
+    <button class="btn soc" data-p="Google"><svg viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.100 1.600l3-3C17.300 1.800 14.800.8 12 .8 7.700.8 4 3.300 2.200 6.900l3.500 2.700C6.600 7.100 9.100 5 12 5z"/><path fill="#4285F4" d="M23.200 12.300c0-.8-.1-1.500-.2-2.200H12v4.300h6.300c-.3 1.400-1.100 2.600-2.300 3.400l3.500 2.700c2.100-1.900 3.700-4.700 3.700-8.200z"/><path fill="#FBBC05" d="M5.700 14.300c-.2-.6-.3-1.200-.3-1.900s.1-1.300.3-1.900L2.200 7.800C1.500 9.200 1.100 10.700 1.100 12.400s.4 3.200 1.100 4.600l3.500-2.700z"/><path fill="#34A853" d="M12 24c3.200 0 5.900-1.100 7.900-2.900l-3.500-2.700c-1 .7-2.400 1.100-4.400 1.100-2.900 0-5.400-2-6.300-4.600L2.200 17.700C4 21.200 7.700 24 12 24z"/></svg>Google</button>
+    <button class="btn soc" data-p="Facebook"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1877F2"/><path fill="#fff" d="M13.500 22v-8h2.700l.4-3.200h-3.100V8.800c0-.9.300-1.500 1.600-1.500h1.700V4.400c-.3 0-1.300-.1-2.400-.1-2.400 0-4 1.500-4 4.100v2.400H7.700V14h2.700v8z"/></svg>Facebook</button>
+  </div>
+  <p class="legal">Ao continuar, você concorda com os <a href="#">Termos de Uso</a> e a <a href="#">Política de Privacidade</a>.</p>
+</section>
+
+<!-- 3. Destino (placeholder) -->
+<section class="screen done" id="done">
+  <span class="logo"><svg><use href="#hp"/></svg></span>
+  <h2 id="dTitle">Início</h2>
+  <p id="dMsg"></p>
+  <button class="btn line" id="reset">Rever tela de boas-vindas</button>
+</section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const KEY = 'igcg_seen_welcome';
+const store = {
+  get(){ try { return localStorage.getItem(KEY) === '1'; } catch(e){ return false; } },
+  set(){ try { localStorage.setItem(KEY, '1'); } catch(e){} },
+  del(){ try { localStorage.removeItem(KEY); } catch(e){} }
+};
+const show = id => document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+const go = (title, msg) => { store.set(); $('dTitle').textContent = title; $('dMsg').textContent = msg; show('done'); };
+
+/* prévia de hinos (títulos do catálogo) */
+const songs = [
+  ['Até que Todos Cheguemos','CD Desperta Geração • EAV','04:20','#d98e2b,#7a3b1d'],
+  ['Não Temerei','CD Caminho Seguro • EAV','02:59','#e08a4c,#2b4a66'],
+  ['Oh Cristo en Tu muerte','CD Nombre Sobre Todo Nombre • LSM','02:36','#5b7a96,#1d2a3a'],
+  ['O Amor é Meu Lugar','Contraste • 288','03:29','#1d4f9c,#0a1630'],
+  ['Ce Qui Metait un Gain','CD Christ Habite en Moi • LSM','02:29','#9fb4c8,#4d6278']
+];
+const rows = songs.map((s,i)=>`<div class="row"><span class="n">0${i+1}</span><span class="cov" style="background:linear-gradient(135deg,${s[3].split(',')[0]},${s[3].split(',')[1]})"></span><div class="t"><strong>${s[0]}</strong><small>${s[1]}</small></div><time>${s[2]}</time></div>`).join('');
+$('track').innerHTML = rows + rows;
+
+/* primeira abertura = boas-vindas; depois, direto no app */
+if (store.get()) { $('dMsg').textContent = 'Aqui entraria o app. A tela de boas-vindas só aparece na primeira abertura.'; show('done'); }
+
+let mode = 'signup';
+function setMode(m){
+  mode = m; const s = m === 'signup';
+  $('tSignup').classList.toggle('on', s); $('tLogin').classList.toggle('on', !s);
+  $('fTitle').textContent = s ? 'Crie sua conta' : 'Bem-vindo de volta';
+  $('fSub').textContent = s ? 'Leva menos de um minuto. É grátis.' : 'Entre para ver seus favoritos e playlists.';
+  $('nameField').classList.toggle('hide', !s);
+  $('forgot').classList.toggle('hide', s);
+  $('submit').textContent = s ? 'Criar conta' : 'Entrar';
+  $('pw').autocomplete = s ? 'new-password' : 'current-password';
+  $('err').textContent = ''; check();
+}
+const valid = () => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test($('email').value.trim()) && $('pw').value.length >= 6 && (mode === 'login' || $('name').value.trim().length > 1);
+function check(){ $('submit').disabled = !valid(); }
+
+$('toSignup').onclick = () => { setMode('signup'); show('form'); };
+$('toLogin').onclick = () => { setMode('login'); show('form'); };
+$('tSignup').onclick = () => setMode('signup');
+$('tLogin').onclick = () => setMode('login');
+$('back').onclick = () => show('welcome');
+$('guest').onclick = () => go('Início', 'Você está explorando como convidado. Crie uma conta quando quiser.');
+['name','email','pw'].forEach(i => $(i).oninput = () => { $('err').textContent = ''; check(); });
+$('eye').onclick = () => { const p = $('pw'); const h = p.type === 'password'; p.type = h ? 'text' : 'password'; $('eye').textContent = h ? 'Ocultar' : 'Mostrar'; };
+$('forgot').onclick = () => { $('err').textContent = 'Fluxo de recuperação de senha: a conectar.'; };
+$('submit').onclick = () => { if (!valid()) { $('err').textContent = 'Confira os campos.'; return; } go('Início', mode === 'signup' ? 'Conta criada para ' + $('email').value.trim() + ' (integração a conectar).' : 'Login de ' + $('email').value.trim() + ' (integração a conectar).'); };
+document.querySelectorAll('.soc').forEach(b => b.onclick = () => go('Início', 'Login com ' + b.dataset.p + ' (integração a conectar).'));
+$('reset').onclick = () => { store.del(); ['name','email','pw'].forEach(i => $(i).value = ''); show('welcome'); };
+</script>
+</body>
+</html>

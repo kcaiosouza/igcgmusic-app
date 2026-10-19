@@ -14,14 +14,17 @@ import {
   SkipBack,
   SkipForward,
 } from 'lucide-react-native';
-import React, { useEffect, useMemo, useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Share,
+  StatusBar as RNStatusBar,
   StyleSheet,
   Text,
   View,
@@ -34,7 +37,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import QueueModal from '@/components/player/queue-modal';
 import { Colors, Fonts } from '@/constants/theme';
@@ -54,6 +57,13 @@ function formatSeconds(seconds: number): string {
 }
 
 export default function ExpandedPlayer() {
+  const insets = useSafeAreaInsets();
+  const topInset = Platform.select({
+    ios: insets.top,
+    android: Math.max(insets.top, RNStatusBar.currentHeight || 28),
+    default: insets.top,
+  });
+
   const {
     activeTrack,
     upcomingQueue,
@@ -78,6 +88,36 @@ export default function ExpandedPlayer() {
   const [isLiked, setIsLiked] = useState<boolean>(false);
   const [isLyricsExpanded, setIsLyricsExpanded] = useState<boolean>(false);
   const [isQueueOpen, setIsQueueOpen] = useState<boolean>(false);
+
+  // Scrubber fluido em tempo real
+  const [isScrubbing, setIsScrubbing] = useState<boolean>(false);
+  const [scrubPercent, setScrubPercent] = useState<number>(0);
+  const scrubberRef = useRef<View | null>(null);
+  const scrubberLayout = useRef<{ x: number; width: number }>({
+    x: 24,
+    width: SCREEN_WIDTH - 48,
+  });
+
+  const handleScrubberTouch = (pageX: number) => {
+    if (!duration || duration <= 0) return 0;
+    const { x, width } = scrubberLayout.current;
+    const safeWidth = width > 0 ? width : SCREEN_WIDTH - 48;
+    const relativeX = pageX - x;
+    const ratio = Math.max(0, Math.min(1, relativeX / safeWidth));
+    setScrubPercent(ratio * 100);
+    return ratio * duration;
+  };
+
+  const handleScrubberRelease = (pageX: number) => {
+    const targetSeconds = handleScrubberTouch(pageX);
+    seekTo(targetSeconds);
+    setIsScrubbing(false);
+  };
+
+  const displayPercent = isScrubbing ? scrubPercent : progressPercent;
+  const displayCurrentTime = isScrubbing
+    ? (scrubPercent / 100) * (duration || 0)
+    : currentTime;
 
   // Rotação contínua do disco de vinil / CD
   const rotation = useSharedValue(0);
@@ -122,15 +162,6 @@ export default function ExpandedPlayer() {
   const hasChords = parsedChords.length > 0;
   const hasLyrics = Boolean(activeTrack?.lyrics);
 
-  // Barra de Scrubber com toque direto
-  const handleScrubberPress = (event: any) => {
-    if (!duration || duration <= 0) return;
-    const { locationX } = event.nativeEvent;
-    const totalWidth = SCREEN_WIDTH - 48; // padding lateral 24 de cada lado
-    const ratio = Math.max(0, Math.min(1, locationX / totalWidth));
-    seekTo(ratio * duration);
-  };
-
   if (!activeTrack) {
     return null;
   }
@@ -145,14 +176,20 @@ export default function ExpandedPlayer() {
       visible={isExpanded}
       animationType="slide"
       presentationStyle="fullScreen"
+      statusBarTranslucent
       onRequestClose={closeExpanded}>
       <View style={styles.root}>
+        <StatusBar style="light" />
         <LinearGradient
           colors={['#252820', '#131510', '#0D1117']}
           style={StyleSheet.absoluteFill}
         />
 
-        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+        <View
+          style={[
+            styles.safeArea,
+            { paddingTop: topInset, paddingBottom: insets.bottom },
+          ]}>
           {/* Header Superior */}
           <View style={styles.header}>
             <View style={styles.dragPill} />
@@ -239,26 +276,56 @@ export default function ExpandedPlayer() {
               </Pressable>
             </View>
 
-            {/* Scrubber / Slider de Progresso */}
-            <View style={styles.scrubberContainer}>
-              <Pressable
-                onPress={handleScrubberPress}
-                style={styles.scrubberTrack}>
+            {/* Scrubber / Slider de Progresso com arrasto fluido em tempo real */}
+            <View
+              ref={scrubberRef}
+              onLayout={() => {
+                scrubberRef.current?.measure((_x, _y, width, _height, pageX) => {
+                  if (width > 0) {
+                    scrubberLayout.current = { x: pageX, width };
+                  }
+                });
+              }}
+              onStartShouldSetResponder={() => true}
+              onMoveShouldSetResponder={() => true}
+              onResponderGrant={(evt) => {
+                setIsScrubbing(true);
+                handleScrubberTouch(evt.nativeEvent.pageX);
+              }}
+              onResponderMove={(evt) => {
+                handleScrubberTouch(evt.nativeEvent.pageX);
+              }}
+              onResponderRelease={(evt) => {
+                handleScrubberRelease(evt.nativeEvent.pageX);
+              }}
+              onResponderTerminate={() => {
+                setIsScrubbing(false);
+              }}
+              style={styles.scrubberContainer}>
+              <View style={styles.scrubberTrack}>
+                <View style={styles.scrubberBackground} />
                 <View
                   style={[
                     styles.scrubberFill,
-                    { width: `${progressPercent}%` },
+                    { width: `${displayPercent}%` },
                   ]}
                 />
                 <View
                   style={[
                     styles.scrubberThumb,
-                    { left: `${Math.max(0, Math.min(97, progressPercent))}%` },
+                    isScrubbing && styles.scrubberThumbActive,
+                    { left: `${Math.max(0, Math.min(100, displayPercent))}%` },
                   ]}
                 />
-              </Pressable>
+              </View>
               <View style={styles.timeRow}>
-                <Text style={styles.timeLabel}>{formatSeconds(currentTime)}</Text>
+                <Text
+                  style={[
+                    styles.timeLabel,
+                    isScrubbing && styles.timeLabelActive,
+                  ]}>
+                  {formatSeconds(displayCurrentTime)}
+                </Text>
                 <Text style={styles.timeLabel}>{formatSeconds(duration)}</Text>
               </View>
             </View>
@@ -458,7 +525,7 @@ export default function ExpandedPlayer() {
               )}
             </View>
           </ScrollView>
-        </SafeAreaView>
+        </View>
 
         {/* Modal da Fila de Reprodução */}
         <QueueModal
@@ -629,24 +696,45 @@ const styles = StyleSheet.create({
   scrubberContainer: {
     width: '100%',
     marginBottom: 20,
+    paddingVertical: 6,
   },
   scrubberTrack: {
     width: '100%',
-    height: 18,
+    height: 28,
     justifyContent: 'center',
+    position: 'relative',
+  },
+  scrubberBackground: {
+    width: '100%',
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    position: 'absolute',
   },
   scrubberFill: {
     height: 4,
     borderRadius: 2,
     backgroundColor: Colors.dark.accent,
+    position: 'absolute',
   },
   scrubberThumb: {
     position: 'absolute',
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     backgroundColor: '#FFFFFF',
-    top: 3,
+    marginLeft: -7,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  scrubberThumbActive: {
+    transform: [{ scale: 1.35 }],
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: Colors.dark.accent,
   },
   timeRow: {
     flexDirection: 'row',
@@ -657,6 +745,10 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     fontSize: 11,
     color: 'rgba(255, 255, 255, 0.5)',
+  },
+  timeLabelActive: {
+    color: Colors.dark.accent,
+    fontFamily: Fonts.bold,
   },
   controlsRow: {
     width: '100%',

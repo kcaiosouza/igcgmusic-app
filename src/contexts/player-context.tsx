@@ -17,6 +17,7 @@ import React, {
 } from 'react';
 import { Platform } from 'react-native';
 
+import { api } from '@/services/api';
 import { PlayerContextType, Track } from '@/types/player';
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -38,14 +39,68 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const isShufflingRef = useRef(isShuffling);
   const trackListRef = useRef(trackList);
   const currentIndexRef = useRef(currentTrackIndex);
+  const activeTrackRef = useRef(activeTrack);
   const onTrackFinishedRef = useRef<() => void>(() => {});
+
+  // Controle de requisições de ouvintes e histórico (evita chamadas duplicadas na mesma reprodução)
+  const recentlyListenedRef = useRef<Set<string>>(new Set());
+  const playbackHistoryLoggedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     isLoopingRef.current = isLooping;
     isShufflingRef.current = isShuffling;
     trackListRef.current = trackList;
     currentIndexRef.current = currentTrackIndex;
-  }, [isLooping, isShuffling, trackList, currentTrackIndex]);
+    activeTrackRef.current = activeTrack;
+  }, [isLooping, isShuffling, trackList, currentTrackIndex, activeTrack]);
+
+  const activeTrackId = activeTrack?.id;
+  const activeTrackLyrics = activeTrack?.lyrics;
+  const activeTrackChords = activeTrack?.chords;
+
+  // Carrega os detalhes completos do hino (letra, cifras, tom, intro) caso faltem na faixa atual
+  useEffect(() => {
+    if (
+      activeTrackId &&
+      (!activeTrackLyrics || activeTrackChords === undefined)
+    ) {
+      api
+        .get<any>(`/tracks/${activeTrackId}`)
+        .then((res) => {
+          if (res.data) {
+            const { lyrics, chords, tone, intro } = res.data;
+
+            setActiveTrack((prev) => {
+              if (!prev || prev.id !== activeTrackId) return prev;
+              return {
+                ...prev,
+                lyrics: lyrics || prev.lyrics,
+                chords: chords !== undefined ? chords : prev.chords,
+                tone: tone !== undefined ? tone : prev.tone,
+                intro: intro !== undefined ? intro : prev.intro,
+              };
+            });
+
+            setTrackList((prevList) =>
+              prevList.map((t) =>
+                t.id === activeTrackId
+                  ? {
+                      ...t,
+                      lyrics: lyrics || t.lyrics,
+                      chords: chords !== undefined ? chords : t.chords,
+                      tone: tone !== undefined ? tone : t.tone,
+                      intro: intro !== undefined ? intro : t.intro,
+                    }
+                  : t
+              )
+            );
+          }
+        })
+        .catch((err) => {
+          console.warn(`Falha ao buscar detalhes do hino ${activeTrackId}:`, err);
+        });
+    }
+  }, [activeTrackId, activeTrackLyrics, activeTrackChords]);
 
   // Inicializa o player e configura o modo de áudio nativo para execução em segundo plano
   useEffect(() => {
@@ -75,8 +130,43 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           setDuration(status.duration);
         }
 
+        // Regra da Web: Incrementar ouvintes após 5s de reprodução contínua
+        const currentTrack = activeTrackRef.current;
+        if (currentTrack?.id && status.currentTime >= 5) {
+          if (!recentlyListenedRef.current.has(currentTrack.id)) {
+            recentlyListenedRef.current.add(currentTrack.id);
+            api.post(`/tracks/${currentTrack.id}/listen`).catch((err) => {
+              console.warn(`Falha ao registrar incremento de ouvintes para ${currentTrack.id}:`, err);
+            });
+          }
+        }
+
+        // Regra da Web: Registrar histórico de reprodução após 25% da faixa (máximo 60s) ou 10s
+        const trackDuration = status.duration || currentTrack?.duration || 0;
+        const historyThreshold =
+          trackDuration > 0 ? Math.min(trackDuration * 0.25, 60) : 10;
+        if (currentTrack?.id && status.currentTime >= historyThreshold) {
+          if (!playbackHistoryLoggedRef.current.has(currentTrack.id)) {
+            playbackHistoryLoggedRef.current.add(currentTrack.id);
+            api
+              .post('/playback-history', {
+                trackId: currentTrack.id,
+                durationPlayed: Math.floor(trackDuration || 120),
+              })
+              .catch((err) => {
+                console.warn(
+                  `Falha ao registrar histórico de reprodução para ${currentTrack.id}:`,
+                  err
+                );
+              });
+          }
+        }
+
         if (status.didJustFinish) {
-          onTrackFinishedRef.current?.();
+          // Desacopla o término síncrono do evento nativo para evitar HostFunction exception
+          setTimeout(() => {
+            onTrackFinishedRef.current?.();
+          }, 100);
         }
       }
     );
@@ -123,7 +213,16 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       const player = playerRef.current;
       if (!player) return;
 
+      if (!track.url) {
+        console.warn('URL do áudio não informada para:', track.title);
+        return;
+      }
+
       try {
+        try {
+          player.pause();
+        } catch {}
+
         player.replace(track.url);
         updateLockScreen(track);
         player.play();

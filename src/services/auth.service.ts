@@ -119,4 +119,34 @@ export const authService = {
     });
     return res.data;
   },
+
+  async updateAddress(addressData: AddressPayload): Promise<any> {
+    const res = await api.put('/auth/address', addressData);
+    return res.data;
+  },
+
+  async updatePreferredLanguages(languages: string[]): Promise<User> {
+    const res = await api.put<User>('/auth/me', { preferredLanguages: languages });
+    return normalizeUser(res.data) || res.data;
+  },
+
+  async upgradePlan(planId: string): Promise<any> {
+    const res = await api.put('/auth/plan', { planId });
+    return res.data;
+  },
+
+  async deleteAccount(): Promise<void> {
+    await api.delete('/auth/me');
+  },
 };
+
+export interface AddressPayload {
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+}
+

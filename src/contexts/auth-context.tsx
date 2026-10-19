@@ -21,6 +21,10 @@ interface AuthContextType {
   register: (payload: RegisterPayload) => Promise<User>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  updateAddress: (addressData: any) => Promise<void>;
+  updatePreferredLanguages: (languages: string[]) => Promise<void>;
+  upgradePlan: (planId: string, planName: string, price: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -151,6 +155,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [token, setUser]);
 
+  const updateAddress = useCallback(
+    async (addressData: any) => {
+      if (!user) return;
+      try {
+        const res = await authService.updateAddress(addressData);
+        const updatedUser = {
+          ...user,
+          address: res,
+          addressId: res?.id || user.addressId,
+        };
+        setUser(updatedUser);
+        await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(updatedUser));
+      } catch (e) {
+        console.warn('Backend address update failed, saving locally:', e);
+        const updatedUser = {
+          ...user,
+          address: addressData,
+        };
+        setUser(updatedUser);
+        await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(updatedUser));
+      }
+    },
+    [user, setUser]
+  );
+
+  const updatePreferredLanguages = useCallback(
+    async (languages: string[]) => {
+      if (!user) return;
+      try {
+        const res = await authService.updatePreferredLanguages(languages);
+        setUser(res);
+        await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(res));
+      } catch (e) {
+        console.warn('Backend languages update failed, saving locally:', e);
+        const updatedUser = {
+          ...user,
+          preferredLanguages: languages,
+        };
+        setUser(updatedUser);
+        await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(updatedUser));
+      }
+    },
+    [user, setUser]
+  );
+
+  const upgradePlan = useCallback(
+    async (planId: string, planName: string, price: string) => {
+      if (!user) return;
+      try {
+        const res = await authService.upgradePlan(planId);
+        setUser(res);
+        await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(res));
+      } catch (e) {
+        console.warn('Backend plan update failed, saving locally:', e);
+        const updatedUser = {
+          ...user,
+          planId,
+          plan: {
+            id: planId,
+            name: planName,
+            price,
+          },
+        };
+        setUser(updatedUser);
+        await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(updatedUser));
+      }
+    },
+    [user, setUser]
+  );
+
+  const deleteAccount = useCallback(async () => {
+    if (!user) return;
+    try {
+      await authService.deleteAccount();
+    } catch (e) {
+      console.warn('Backend delete account failed:', e);
+    }
+    await logout();
+  }, [user, logout]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -162,6 +246,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         refreshProfile,
+        updateAddress,
+        updatePreferredLanguages,
+        upgradePlan,
+        deleteAccount,
       }}>
       {children}
     </AuthContext.Provider>

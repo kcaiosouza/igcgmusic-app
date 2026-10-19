@@ -1,8 +1,10 @@
+import Constants, { AppOwnership, ExecutionEnvironment } from 'expo-constants';
 import {
   AudioPlayer,
+  AudioSource,
   AudioStatus,
+  clearAllPreloadedSources,
   createAudioPlayer,
-  preload,
   requestNotificationPermissionsAsync,
   setAudioModeAsync,
 } from 'expo-audio';
@@ -20,6 +22,16 @@ import { Platform } from 'react-native';
 import { api } from '@/services/api';
 import { PlayerContextType, Track } from '@/types/player';
 
+function formatAudioUrl(rawUrl: string): string {
+  if (!rawUrl) return '';
+  const trimmed = rawUrl.trim();
+  try {
+    return encodeURI(decodeURI(trimmed));
+  } catch {
+    return trimmed;
+  }
+}
+
 const PlayerContext = createContext<PlayerContextType | null>(null);
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
@@ -35,6 +47,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const playerRef = useRef<AudioPlayer | null>(null);
+  const subscriptionRef = useRef<{ remove: () => void } | null>(null);
+  const isLockScreenActiveRef = useRef(false);
+  const lockScreenFailedRef = useRef(false);
+
   const isLoopingRef = useRef(isLooping);
   const isShufflingRef = useRef(isShuffling);
   const trackListRef = useRef(trackList);
@@ -102,24 +118,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [activeTrackId, activeTrackLyrics, activeTrackChords]);
 
-  // Inicializa o player e configura o modo de áudio nativo para execução em segundo plano
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      requestNotificationPermissionsAsync().catch(() => {});
+  const attachPlayerListeners = useCallback((player: AudioPlayer) => {
+    if (subscriptionRef.current) {
+      try {
+        subscriptionRef.current.remove();
+      } catch {}
+      subscriptionRef.current = null;
     }
 
-    setAudioModeAsync({
-      playsInSilentMode: true,
-      shouldPlayInBackground: true,
-      interruptionMode: 'doNotMix',
-    }).catch((err) => {
-      console.warn('Erro ao configurar audio mode global:', err);
-    });
-
-    const player = createAudioPlayer(null, { updateInterval: 250 });
-    playerRef.current = player;
-
-    const subscription = player.addListener(
+    subscriptionRef.current = player.addListener(
       'playbackStatusUpdate',
       (status: AudioStatus) => {
         setIsPlaying(status.playing);
@@ -136,7 +143,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           if (!recentlyListenedRef.current.has(currentTrack.id)) {
             recentlyListenedRef.current.add(currentTrack.id);
             api.post(`/tracks/${currentTrack.id}/listen`).catch((err) => {
-              console.warn(`Falha ao registrar incremento de ouvintes para ${currentTrack.id}:`, err);
+              console.warn(
+                `Falha ao registrar incremento de ouvintes para ${currentTrack.id}:`,
+                err
+              );
             });
           }
         }
@@ -170,32 +180,104 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         }
       }
     );
-
-    return () => {
-      subscription.remove();
-      player.remove();
-      playerRef.current = null;
-    };
   }, []);
 
-  const updateLockScreen = useCallback((track: Track) => {
-    if (!playerRef.current) return;
+  const createAndInitPlayer = useCallback(
+    (initialSource?: AudioSource) => {
+      if (playerRef.current) {
+        try {
+          playerRef.current.remove();
+        } catch {}
+        playerRef.current = null;
+      }
+      isLockScreenActiveRef.current = false;
+
+      const player = createAudioPlayer(initialSource || null, {
+        updateInterval: 250,
+        keepAudioSessionActive: true,
+      });
+      player.loop = isLoopingRef.current;
+      playerRef.current = player;
+      attachPlayerListeners(player);
+      return player;
+    },
+    [attachPlayerListeners]
+  );
+
+  // Inicializa o player e configura o modo de áudio nativo para execução em segundo plano
+  useEffect(() => {
     try {
-      playerRef.current.setActiveForLockScreen(
-        true,
-        {
-          title: track.title,
-          artist: track.members || 'IGCG Music',
-          albumTitle: track.albumName || 'IGCG Music',
-          artworkUrl: track.thumbnail,
-        },
-        {
+      clearAllPreloadedSources();
+    } catch {}
+
+    if (Platform.OS === 'android') {
+      requestNotificationPermissionsAsync().catch(() => {});
+    }
+
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      interruptionMode: 'doNotMix',
+    }).catch((err) => {
+      console.warn('Erro ao configurar audio mode global:', err);
+    });
+
+    createAndInitPlayer(null);
+
+    return () => {
+      if (subscriptionRef.current) {
+        try {
+          subscriptionRef.current.remove();
+        } catch {}
+        subscriptionRef.current = null;
+      }
+      if (playerRef.current) {
+        try {
+          playerRef.current.remove();
+        } catch {}
+        playerRef.current = null;
+      }
+    };
+  }, [createAndInitPlayer]);
+
+  const updateLockScreen = useCallback((track: Track) => {
+    const player = playerRef.current;
+    if (!player) return;
+
+    // No Expo Go para Android, o AudioControlsService não existe no manifest pré-compilado do Expo Go.
+    // Chamar setActiveForLockScreen geraria "service binding failed".
+    const isExpoGo =
+      Constants.appOwnership === AppOwnership.Expo ||
+      Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+    if (Platform.OS === 'android' && isExpoGo) {
+      return;
+    }
+
+    if (lockScreenFailedRef.current) {
+      return;
+    }
+
+    const metadata = {
+      title: track.title,
+      artist: track.members || 'IGCG Music',
+      albumTitle: track.albumName || 'IGCG Music',
+      artworkUrl: track.thumbnail,
+    };
+
+    try {
+      if (isLockScreenActiveRef.current) {
+        player.updateLockScreenMetadata(metadata);
+      } else {
+        player.setActiveForLockScreen(true, metadata, {
           showSeekForward: true,
           showSeekBackward: true,
-        }
-      );
+        });
+        isLockScreenActiveRef.current = true;
+      }
     } catch (e) {
-      console.warn('Falha ao definir setActiveForLockScreen:', e);
+      lockScreenFailedRef.current = true;
+      console.warn('Falha ao configurar controles na tela de bloqueio:', e);
     }
   }, []);
 
@@ -210,11 +292,22 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       setCurrentTime(0);
       setDuration(track.duration || 0);
 
-      const player = playerRef.current;
-      if (!player) return;
-
       if (!track.url) {
         console.warn('URL do áudio não informada para:', track.title);
+        return;
+      }
+
+      const formattedUrl = formatAudioUrl(track.url);
+      if (!formattedUrl) {
+        console.warn('URL do áudio inválida:', track.url);
+        return;
+      }
+
+      let player = playerRef.current;
+      if (!player) {
+        player = createAndInitPlayer({ uri: formattedUrl });
+        updateLockScreen(track);
+        player.play();
         return;
       }
 
@@ -223,20 +316,23 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           player.pause();
         } catch {}
 
-        player.replace(track.url);
+        try {
+          player.replace({ uri: formattedUrl });
+        } catch (replaceErr) {
+          console.warn(
+            'Falha no player.replace, recriando player com a nova faixa:',
+            replaceErr
+          );
+          player = createAndInitPlayer({ uri: formattedUrl });
+        }
+
         updateLockScreen(track);
         player.play();
-
-        // Pré-carrega a próxima faixa em buffer em segundo plano para transição imediata
-        const nextTrack = list[index + 1];
-        if (nextTrack?.url) {
-          preload(nextTrack.url).catch(() => {});
-        }
       } catch (err) {
         console.error('Erro ao reproduzir faixa:', err);
       }
     },
-    [updateLockScreen]
+    [createAndInitPlayer, updateLockScreen]
   );
 
   const handlePlayNext = useCallback(async () => {
@@ -341,7 +437,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleLoop = useCallback(() => {
-    setIsLooping((prev) => !prev);
+    setIsLooping((prev) => {
+      const next = !prev;
+      if (playerRef.current) {
+        playerRef.current.loop = next;
+      }
+      return next;
+    });
   }, []);
 
   const toggleShuffle = useCallback(() => {
@@ -436,7 +538,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setCurrentTrackIndex(-1);
     setActiveTrack(null);
     playerRef.current?.pause();
-    playerRef.current?.setActiveForLockScreen(false);
+    if (isLockScreenActiveRef.current) {
+      try {
+        playerRef.current?.setActiveForLockScreen(false);
+      } catch {}
+      isLockScreenActiveRef.current = false;
+    }
   }, []);
 
   const openExpanded = useCallback(() => setIsExpanded(true), []);

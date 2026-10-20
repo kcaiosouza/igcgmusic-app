@@ -97,14 +97,12 @@ export const NumberedTrackRow = React.memo(function NumberedTrackRow({
         </Text>
       </View>
       <View style={styles.trackStatsGroup}>
-        {track.playCount ? (
-          <View style={styles.statChip}>
-            <Users size={12} color={colors.textSecondary} />
-            <Text style={[styles.statText, { color: colors.textSecondary }]}>
-              {formatNumber(track.playCount)}
-            </Text>
-          </View>
-        ) : null}
+        <View style={styles.statChip}>
+          <Users size={12} color={colors.textSecondary} />
+          <Text style={[styles.statText, { color: colors.textSecondary }]}>
+            {formatNumber(track.playCount)}
+          </Text>
+        </View>
         <View style={styles.statChip}>
           <Clock size={12} color={colors.textSecondary} />
           <Text style={[styles.statText, { color: colors.textSecondary }]}>
@@ -165,9 +163,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   trackStatsGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    gap: 4,
   },
   statChip: {
     flexDirection: 'row',

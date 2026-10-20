@@ -1,10 +1,7 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { Platform, useColorScheme } from 'react-native';
+import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
-
-// Mesma cor de fundo do Mini Player (#2E2E20)
-const MINIPLAYER_BG = '#2E2E20';
 
 export default function AppTabs() {
   const scheme = useColorScheme();
@@ -13,16 +10,20 @@ export default function AppTabs() {
   return (
     <NativeTabs
       backgroundColor={colors.background}
-      tintColor={MINIPLAYER_BG}
-      indicatorColor={MINIPLAYER_BG}
-      rippleColor="rgba(46, 46, 32, 0.25)"
+      tintColor={colors.accent}
+      indicatorColor={
+        scheme === 'dark'
+          ? 'rgba(4, 211, 97, 0.22)'
+          : 'rgba(4, 211, 97, 0.16)'
+      }
+      rippleColor="rgba(4, 211, 97, 0.15)"
       iconColor={{
         default: colors.textSecondary,
-        selected: Platform.OS === 'android' ? '#FFFFFF' : MINIPLAYER_BG,
+        selected: colors.accent,
       }}
       labelStyle={{
         default: { color: colors.textSecondary },
-        selected: { color: Platform.OS === 'android' ? colors.text : MINIPLAYER_BG },
+        selected: { color: colors.accent },
       }}>
       <NativeTabs.Trigger name="home">
         <NativeTabs.Trigger.Label>Início</NativeTabs.Trigger.Label>

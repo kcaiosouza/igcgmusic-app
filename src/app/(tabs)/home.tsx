@@ -45,6 +45,19 @@ import { Track } from '@/types/player';
 const DEFAULT_COVER =
   'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300';
 
+const GREETINGS = [
+  'Olá,',
+  'Desfrute mais um pouco,',
+  'Bom ter você de volta,',
+  'Que bom te ver por aqui,',
+  'A comunhão fica melhor com você,',
+  'Vamos desfrutar juntos,',
+  'Um prazer ter você aqui,',
+  'Que este momento seja especial,',
+  'Aproveite este tempo,',
+  'Vamos cantar ao Senhor,',
+];
+
 function formatDuration(seconds: number): string {
   if (!seconds || isNaN(seconds) || seconds < 0) return '0:00';
   const mins = Math.floor(seconds / 60);
@@ -67,6 +80,10 @@ export default function HomeScreen() {
   const colors = Colors[isDark ? 'dark' : 'light'];
 
   const { activeTrack, playList } = usePlayer();
+
+  const [greeting] = useState(
+    () => GREETINGS[Math.floor(Math.random() * GREETINGS.length)]
+  );
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -184,20 +201,18 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={[styles.greetingSub, { color: colors.textSecondary }]}>
-              A paz do Senhor,
+              {greeting}
             </Text>
             <Text style={[styles.greetingName, { color: colors.text }]}>
               {user?.name || user?.username || 'Irmão(ã)'}
             </Text>
           </View>
           <View style={styles.headerRightBadge}>
-            <View
-              style={[
-                styles.brandLogoCircle,
-                { backgroundColor: colors.olive },
-              ]}>
-              <Music size={18} color="#FFFFFF" />
-            </View>
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.brandLogoCircle}
+              contentFit="cover"
+            />
           </View>
         </View>
 
@@ -672,8 +687,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden',
   },
   scrollView: {
     flex: 1,

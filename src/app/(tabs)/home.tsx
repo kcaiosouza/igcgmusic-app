@@ -2,10 +2,8 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
 import {
-  Clock,
   Compass,
   History,
-  MoreVertical,
   Music,
   Play,
   RotateCw,
@@ -31,6 +29,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import TrackActionsModal from '@/components/player/track-actions-modal';
+import { NumberedTrackRow } from '@/components/track/numbered-track-row';
 import { Colors, Fonts } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { usePlayer } from '@/contexts/player-context';
@@ -407,90 +406,19 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={styles.tracksVerticalList}>
-                  {feed.catalog.slice(0, 5).map((track, idx) => {
-                    const isCurrent = activeTrack?.id === track.id;
-                    return (
-                      <Pressable
-                        key={track.id}
-                        onPress={() =>
-                          handlePlayTrack(track, feed.catalog.slice(0, 10))
-                        }
-                        onLongPress={() => setSelectedTrackForActions(track)}
-                        style={({ pressed }) => [
-                          styles.numberedTrackRow,
-                          {
-                            backgroundColor: colors.card,
-                            borderColor: isCurrent
-                              ? colors.accent
-                              : colors.borderSubtle,
-                          },
-                          pressed && styles.itemPressed,
-                        ]}>
-                        <Text
-                          style={[
-                            styles.trackIndexNumber,
-                            { color: isCurrent ? colors.accent : colors.textSecondary },
-                          ]}>
-                          {(idx + 1).toString().padStart(2, '0')}
-                        </Text>
-                        <Image
-                          source={{ uri: track.thumbnail || DEFAULT_COVER }}
-                          style={styles.trackThumbnail}
-                          contentFit="cover"
-                        />
-                        <View style={styles.trackDetailsCol}>
-                          <Text
-                            style={[
-                              styles.trackTitle,
-                              {
-                                color: isCurrent ? colors.accent : colors.text,
-                              },
-                            ]}
-                            numberOfLines={1}>
-                            {track.title}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.trackArtist,
-                              { color: colors.textSecondary },
-                            ]}
-                            numberOfLines={1}>
-                            {track.members}
-                          </Text>
-                        </View>
-                        <View style={styles.trackStatsGroup}>
-                          {track.playCount ? (
-                            <View style={styles.statChip}>
-                              <Users size={12} color={colors.textSecondary} />
-                              <Text
-                                style={[
-                                  styles.statText,
-                                  { color: colors.textSecondary },
-                                ]}>
-                                {formatNumber(track.playCount)}
-                              </Text>
-                            </View>
-                          ) : null}
-                          <View style={styles.statChip}>
-                            <Clock size={12} color={colors.textSecondary} />
-                            <Text
-                              style={[
-                                styles.statText,
-                                { color: colors.textSecondary },
-                              ]}>
-                              {formatDuration(track.duration)}
-                            </Text>
-                          </View>
-                        </View>
-                        <Pressable
-                          onPress={() => setSelectedTrackForActions(track)}
-                          hitSlop={10}
-                          style={styles.moreActionButton}>
-                          <MoreVertical size={16} color={colors.textSecondary} />
-                        </Pressable>
-                      </Pressable>
-                    );
-                  })}
+                  {feed.catalog.slice(0, 5).map((track, idx) => (
+                    <NumberedTrackRow
+                      key={track.id}
+                      track={track}
+                      index={idx}
+                      isCurrent={activeTrack?.id === track.id}
+                      onPress={() =>
+                        handlePlayTrack(track, feed.catalog.slice(0, 10))
+                      }
+                      onLongPress={() => setSelectedTrackForActions(track)}
+                      onMorePress={() => setSelectedTrackForActions(track)}
+                    />
+                  ))}
                 </View>
               </View>
             ) : null}
@@ -566,82 +494,17 @@ export default function HomeScreen() {
                 <View style={styles.tracksVerticalList}>
                   {feed.top10
                     .slice(0, showAllTop10 ? 10 : 3)
-                    .map((track, idx) => {
-                      const isCurrent = activeTrack?.id === track.id;
-                      return (
-                        <Pressable
-                          key={track.id}
-                          onPress={() => handlePlayTrack(track, feed.top10)}
-                          onLongPress={() => setSelectedTrackForActions(track)}
-                          style={({ pressed }) => [
-                            styles.numberedTrackRow,
-                            {
-                              backgroundColor: colors.card,
-                              borderColor: isCurrent
-                                ? colors.accent
-                                : colors.borderSubtle,
-                            },
-                            pressed && styles.itemPressed,
-                          ]}>
-                          <Text
-                            style={[
-                              styles.trackIndexNumber,
-                              {
-                                color: isCurrent
-                                  ? colors.accent
-                                  : colors.textSecondary,
-                              },
-                            ]}>
-                            {(idx + 1).toString().padStart(2, '0')}
-                          </Text>
-                          <Image
-                            source={{ uri: track.thumbnail || DEFAULT_COVER }}
-                            style={styles.trackThumbnail}
-                            contentFit="cover"
-                          />
-                          <View style={styles.trackDetailsCol}>
-                            <Text
-                              style={[
-                                styles.trackTitle,
-                                {
-                                  color: isCurrent ? colors.accent : colors.text,
-                                },
-                              ]}
-                              numberOfLines={1}>
-                              {track.title}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.trackArtist,
-                                { color: colors.textSecondary },
-                              ]}
-                              numberOfLines={1}>
-                              {track.members}
-                            </Text>
-                          </View>
-                          <View style={styles.trackStatsGroup}>
-                            {track.playCount ? (
-                              <View style={styles.statChip}>
-                                <Users size={12} color={colors.textSecondary} />
-                                <Text
-                                  style={[
-                                    styles.statText,
-                                    { color: colors.textSecondary },
-                                  ]}>
-                                  {formatNumber(track.playCount)}
-                                </Text>
-                              </View>
-                            ) : null}
-                          </View>
-                          <Pressable
-                            onPress={() => setSelectedTrackForActions(track)}
-                            hitSlop={10}
-                            style={styles.moreActionButton}>
-                            <MoreVertical size={16} color={colors.textSecondary} />
-                          </Pressable>
-                        </Pressable>
-                      );
-                    })}
+                    .map((track, idx) => (
+                      <NumberedTrackRow
+                        key={track.id}
+                        track={track}
+                        index={idx}
+                        isCurrent={activeTrack?.id === track.id}
+                        onPress={() => handlePlayTrack(track, feed.top10)}
+                        onLongPress={() => setSelectedTrackForActions(track)}
+                        onMorePress={() => setSelectedTrackForActions(track)}
+                      />
+                    ))}
                 </View>
               </View>
             ) : null}
@@ -702,76 +565,19 @@ export default function HomeScreen() {
                   </Text>
                 </View>
                 <View style={styles.tracksVerticalList}>
-                  {feed.popularDownloads.slice(0, 5).map((track, idx) => {
-                    const isCurrent = activeTrack?.id === track.id;
-                    return (
-                      <Pressable
-                        key={track.id}
-                        onPress={() =>
-                          handlePlayTrack(track, feed.popularDownloads)
-                        }
-                        onLongPress={() => setSelectedTrackForActions(track)}
-                        style={({ pressed }) => [
-                          styles.numberedTrackRow,
-                          {
-                            backgroundColor: colors.card,
-                            borderColor: isCurrent
-                              ? colors.accent
-                              : colors.borderSubtle,
-                          },
-                          pressed && styles.itemPressed,
-                        ]}>
-                        <Text
-                          style={[
-                            styles.trackIndexNumber,
-                            { color: colors.accent, fontWeight: '800' },
-                          ]}>
-                          {(idx + 1).toString().padStart(2, '0')}
-                        </Text>
-                        <Image
-                          source={{ uri: track.thumbnail || DEFAULT_COVER }}
-                          style={styles.trackThumbnail}
-                          contentFit="cover"
-                        />
-                        <View style={styles.trackDetailsCol}>
-                          <Text
-                            style={[
-                              styles.trackTitle,
-                              {
-                                color: isCurrent ? colors.accent : colors.text,
-                              },
-                            ]}
-                            numberOfLines={1}>
-                            {track.title}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.trackArtist,
-                              { color: colors.textSecondary },
-                            ]}
-                            numberOfLines={1}>
-                            {track.members}
-                          </Text>
-                        </View>
-                        <View style={styles.trackStatsGroup}>
-                          <Clock size={12} color={colors.textSecondary} />
-                          <Text
-                            style={[
-                              styles.statText,
-                              { color: colors.textSecondary },
-                            ]}>
-                            {formatDuration(track.duration)}
-                          </Text>
-                        </View>
-                        <Pressable
-                          onPress={() => setSelectedTrackForActions(track)}
-                          hitSlop={10}
-                          style={styles.moreActionButton}>
-                          <MoreVertical size={16} color={colors.textSecondary} />
-                        </Pressable>
-                      </Pressable>
-                    );
-                  })}
+                  {feed.popularDownloads.slice(0, 5).map((track, idx) => (
+                    <NumberedTrackRow
+                      key={track.id}
+                      track={track}
+                      index={idx}
+                      isCurrent={activeTrack?.id === track.id}
+                      onPress={() =>
+                        handlePlayTrack(track, feed.popularDownloads)
+                      }
+                      onLongPress={() => setSelectedTrackForActions(track)}
+                      onMorePress={() => setSelectedTrackForActions(track)}
+                    />
+                  ))}
                 </View>
               </View>
             ) : null}
@@ -989,44 +795,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  numberedTrackRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    gap: 12,
-  },
-  trackIndexNumber: {
-    fontFamily: Fonts.extraBold,
-    fontSize: 14,
-    width: 22,
-    textAlign: 'center',
-  },
-  trackThumbnail: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: '#1E201C',
-  },
-  trackDetailsCol: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  trackStatsGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  statChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  statText: {
-    fontFamily: Fonts.medium,
-    fontSize: 11,
-  },
   mixBanner: {
     padding: 20,
     borderRadius: 20,
@@ -1124,12 +892,5 @@ const styles = StyleSheet.create({
   itemPressed: {
     opacity: 0.85,
     transform: [{ scale: 0.98 }],
-  },
-  moreActionButton: {
-    padding: 6,
-    marginLeft: 4,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

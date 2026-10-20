@@ -209,7 +209,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.headerRightBadge}>
             <Image
-              source={require('@/assets/images/icon.png')}
+              source={require('@/assets/images/logo.png')}
               style={styles.brandLogoCircle}
               contentFit="cover"
             />

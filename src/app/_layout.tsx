@@ -18,6 +18,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { PlayerProvider } from '@/contexts/player-context';
@@ -88,13 +89,15 @@ export default function RootLayout() {
   const isDark = colorScheme === 'dark';
 
   return (
-    <AuthProvider>
-      <PlayerProvider>
-        <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-          <StatusBar style={isDark ? 'light' : 'dark'} />
-          <RootNavigator fontsReady={fontsReady} />
-        </ThemeProvider>
-      </PlayerProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <PlayerProvider>
+          <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+            <StatusBar style={isDark ? 'light' : 'dark'} />
+            <RootNavigator fontsReady={fontsReady} />
+          </ThemeProvider>
+        </PlayerProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

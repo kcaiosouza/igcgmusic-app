@@ -41,6 +41,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import QueueModal from '@/components/player/queue-modal';
 import { Colors, Fonts } from '@/constants/theme';
+import { useAuth } from '@/contexts/auth-context';
 import { usePlayer } from '@/contexts/player-context';
 import { parseFullChords } from '@/utils/chords';
 
@@ -84,8 +85,9 @@ export default function ExpandedPlayer() {
     toggleShuffle,
   } = usePlayer();
 
+  const { likedTracks, toggleLike } = useAuth();
   const [activeTab, setActiveTab] = useState<'lyrics' | 'chords'>('lyrics');
-  const [isLiked, setIsLiked] = useState<boolean>(false);
+  const isLiked = activeTrack?.id ? likedTracks.has(activeTrack.id) : false;
   const [isLyricsExpanded, setIsLyricsExpanded] = useState<boolean>(false);
   const [isQueueOpen, setIsQueueOpen] = useState<boolean>(false);
 
@@ -262,7 +264,11 @@ export default function ExpandedPlayer() {
               </View>
 
               <Pressable
-                onPress={() => setIsLiked(!isLiked)}
+                onPress={() => {
+                  if (activeTrack?.id) {
+                    toggleLike(activeTrack.id);
+                  }
+                }}
                 hitSlop={12}
                 style={({ pressed }) => [
                   styles.heartButton,

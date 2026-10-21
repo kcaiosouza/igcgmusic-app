@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import {
   Check,
+  Heart,
   ListEnd,
   ListPlus,
   Play,
@@ -17,6 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors, Fonts } from '@/constants/theme';
+import { useAuth } from '@/contexts/auth-context';
 import { usePlayer } from '@/contexts/player-context';
 import { Track } from '@/types/player';
 
@@ -35,9 +37,12 @@ export default function TrackActionsModal({
   onClose,
 }: TrackActionsModalProps) {
   const { play, addToQueueNext, addToQueueEnd } = usePlayer();
+  const { likedTracks, toggleLike } = useAuth();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   if (!track) return null;
+
+  const isLiked = track ? likedTracks.has(track.id) : false;
 
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -50,6 +55,15 @@ export default function TrackActionsModal({
   const handlePlayNow = async () => {
     await play(track);
     onClose();
+  };
+
+  const handleToggleLike = async () => {
+    const success = await toggleLike(track.id);
+    if (success) {
+      showToast(isLiked ? 'Removido dos favoritos' : 'Adicionado aos favoritos');
+    } else {
+      onClose();
+    }
   };
 
   const handlePlayNext = () => {
@@ -123,6 +137,40 @@ export default function TrackActionsModal({
                   <Text style={styles.actionTitle}>Tocar Agora</Text>
                   <Text style={styles.actionSubtitle}>
                     Inicia a reprodução desta faixa imediatamente
+                  </Text>
+                </View>
+              </Pressable>
+
+              {/* Curtir / Salvar nos Favoritos */}
+              <Pressable
+                onPress={handleToggleLike}
+                style={({ pressed }) => [
+                  styles.actionRow,
+                  pressed && styles.actionRowPressed,
+                ]}>
+                <View
+                  style={[
+                    styles.actionIconContainer,
+                    isLiked && { backgroundColor: 'rgba(255, 77, 77, 0.15)' },
+                  ]}>
+                  <Heart
+                    size={18}
+                    color={isLiked ? '#FF4D4D' : 'rgba(255, 255, 255, 0.8)'}
+                    fill={isLiked ? '#FF4D4D' : 'transparent'}
+                  />
+                </View>
+                <View style={styles.actionTextCol}>
+                  <Text
+                    style={[
+                      styles.actionTitle,
+                      isLiked && { color: '#FF7070' },
+                    ]}>
+                    {isLiked ? 'Remover dos Favoritos' : 'Salvar nos Favoritos'}
+                  </Text>
+                  <Text style={styles.actionSubtitle}>
+                    {isLiked
+                      ? 'Remover este hino da sua lista de curtidas'
+                      : 'Adicionar este hino aos seus favoritos'}
                   </Text>
                 </View>
               </Pressable>

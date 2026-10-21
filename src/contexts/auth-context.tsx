@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 
 import { setApiAuthToken, setOnUnauthorizedCallback } from '@/services/api';
 import {
@@ -8,15 +9,21 @@ import {
   RegisterPayload,
   User,
 } from '@/services/auth.service';
+import { likesService } from '@/services/likes.service';
 
 const AUTH_TOKEN_KEY = 'igcgmusic_auth_token';
 const AUTH_USER_KEY = 'igcgmusic_auth_user';
+const AUTH_LIKED_TRACKS_KEY = 'igcgmusic_liked_tracks';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   token: string | null;
   loading: boolean;
+  likedTracks: Set<string>;
+  isLiked: (trackId: string) => boolean;
+  toggleLike: (trackId: string) => Promise<boolean>;
+  syncLikes: () => Promise<void>;
   login: (identifier: string, password: string) => Promise<User>;
   register: (payload: RegisterPayload) => Promise<User>;
   logout: () => Promise<void>;
@@ -33,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [likedTracks, setLikedTracks] = useState<Set<string>>(new Set());
 
   const setUser = useCallback((u: User | null) => {
     setUserState(normalizeUser(u));
@@ -42,10 +50,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setApiAuthToken(null);
     setToken(null);
     setUserState(null);
+    setLikedTracks(new Set());
     try {
-      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, AUTH_USER_KEY]);
+      await AsyncStorage.multiRemove([
+        AUTH_TOKEN_KEY,
+        AUTH_USER_KEY,
+        AUTH_LIKED_TRACKS_KEY,
+      ]);
     } catch (e) {
       console.warn('Failed to clear auth storage:', e);
+    }
+  }, []);
+
+  const syncLikes = useCallback(async () => {
+    try {
+      const tracks = await likesService.getLikes();
+      const ids = new Set(tracks.map((t) => t.id).filter(Boolean));
+      setLikedTracks(ids);
+      await AsyncStorage.setItem(
+        AUTH_LIKED_TRACKS_KEY,
+        JSON.stringify(Array.from(ids))
+      );
+    } catch (e) {
+      console.warn('Failed to sync likes from backend:', e);
     }
   }, []);
 
@@ -63,10 +90,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const loadStoredAuth = async () => {
       try {
-        const [[, storedToken], [, storedUser]] = await AsyncStorage.multiGet([
-          AUTH_TOKEN_KEY,
-          AUTH_USER_KEY,
-        ]);
+        const [[, storedToken], [, storedUser], [, storedLikes]] =
+          await AsyncStorage.multiGet([
+            AUTH_TOKEN_KEY,
+            AUTH_USER_KEY,
+            AUTH_LIKED_TRACKS_KEY,
+          ]);
+
+        if (storedLikes && isMounted) {
+          try {
+            const parsed = JSON.parse(storedLikes);
+            if (Array.isArray(parsed)) {
+              setLikedTracks(new Set(parsed));
+            }
+          } catch {}
+        }
 
         if (storedToken && isMounted) {
           setApiAuthToken(storedToken);
@@ -89,6 +127,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } catch (meErr) {
             console.warn('Could not refresh user profile:', meErr);
           }
+
+          // Fetch fresh likes from server
+          try {
+            const tracks = await likesService.getLikes();
+            if (isMounted) {
+              const ids = new Set(tracks.map((t) => t.id).filter(Boolean));
+              setLikedTracks(ids);
+              await AsyncStorage.setItem(
+                AUTH_LIKED_TRACKS_KEY,
+                JSON.stringify(Array.from(ids))
+              );
+            }
+          } catch (likeErr) {
+            console.warn('Could not load likes on startup:', likeErr);
+          }
         }
       } catch (e) {
         console.warn('Failed to restore auth session:', e);
@@ -106,6 +159,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [setUser]);
 
+  const toggleLike = useCallback(
+    async (trackId: string): Promise<boolean> => {
+      if (!token || !user) {
+        Alert.alert(
+          'Conta necessária',
+          'Faça login na sua conta para curtir e salvar seus hinos favoritos.'
+        );
+        return false;
+      }
+
+      const wasLiked = likedTracks.has(trackId);
+      const nextSet = new Set(likedTracks);
+      if (wasLiked) {
+        nextSet.delete(trackId);
+      } else {
+        nextSet.add(trackId);
+      }
+      setLikedTracks(nextSet);
+
+      try {
+        await AsyncStorage.setItem(
+          AUTH_LIKED_TRACKS_KEY,
+          JSON.stringify(Array.from(nextSet))
+        );
+      } catch (err) {
+        console.warn('Failed to cache liked tracks:', err);
+      }
+
+      try {
+        if (wasLiked) {
+          await likesService.unlike(trackId);
+        } else {
+          await likesService.like(trackId);
+        }
+        return true;
+      } catch (err) {
+        console.error('Failed to sync like action with backend:', err);
+        // Rollback
+        setLikedTracks((current) => {
+          const rollbackSet = new Set(current);
+          if (wasLiked) {
+            rollbackSet.add(trackId);
+          } else {
+            rollbackSet.delete(trackId);
+          }
+          AsyncStorage.setItem(
+            AUTH_LIKED_TRACKS_KEY,
+            JSON.stringify(Array.from(rollbackSet))
+          ).catch(() => {});
+          return rollbackSet;
+        });
+        return false;
+      }
+    },
+    [token, user, likedTracks]
+  );
+
+  const isLiked = useCallback(
+    (trackId: string) => {
+      return likedTracks.has(trackId);
+    },
+    [likedTracks]
+  );
+
   const login = useCallback(
     async (identifier: string, password: string): Promise<User> => {
       const { user: loggedUser, token: authToken } = await authService.login(identifier, password);
@@ -117,6 +234,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         [AUTH_TOKEN_KEY, authToken],
         [AUTH_USER_KEY, JSON.stringify(loggedUser)],
       ]);
+
+      // Sync likes immediately
+      try {
+        const tracks = await likesService.getLikes();
+        const ids = new Set(tracks.map((t) => t.id).filter(Boolean));
+        setLikedTracks(ids);
+        await AsyncStorage.setItem(
+          AUTH_LIKED_TRACKS_KEY,
+          JSON.stringify(Array.from(ids))
+        );
+      } catch (e) {
+        console.warn('Could not sync likes after login:', e);
+      }
 
       return loggedUser;
     },
@@ -242,6 +372,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         token,
         loading,
+        likedTracks,
+        isLiked,
+        toggleLike,
+        syncLikes,
         login,
         register,
         logout,

@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import {
   ChevronDown,
   Heart,
@@ -258,9 +259,23 @@ export default function ExpandedPlayer() {
                 <Text style={styles.mainTitle} numberOfLines={2}>
                   {activeTrack.title}
                 </Text>
-                <Text style={styles.subtitleText} numberOfLines={1}>
-                  {subtitle}
-                </Text>
+                <Pressable
+                  onPress={() => {
+                    const artistKey =
+                      activeTrack.authorId || activeTrack.members;
+                    if (artistKey) {
+                      closeExpanded();
+                      router.push({
+                        pathname: '/(tabs)/home/artist/[id]' as any,
+                        params: { id: artistKey, name: activeTrack.members },
+                      });
+                    }
+                  }}
+                  hitSlop={8}>
+                  <Text style={styles.subtitleText} numberOfLines={1}>
+                    {subtitle}
+                  </Text>
+                </Pressable>
               </View>
 
               <Pressable

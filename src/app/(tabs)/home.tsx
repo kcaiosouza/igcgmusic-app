@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
   Compass,
   History,
@@ -181,17 +181,13 @@ export default function HomeScreen() {
     playList(shuffled.slice(0, 30), 0);
   };
 
-  // Tocar Playlist ao clicar
+  // Abrir tela da Playlist ao clicar
   const handlePlaylistClick = (playlist: CuratedPlaylist) => {
-    if (Array.isArray(playlist.tracks) && playlist.tracks.length > 0) {
-      playList(playlist.tracks, 0);
-    } else {
-      // Fallback: se a playlist pública for tocada
-      const fallbackTracks = feed.catalog.slice(0, 10);
-      if (fallbackTracks.length) {
-        playList(fallbackTracks, 0);
-      }
-    }
+    if (!playlist?.id) return;
+    router.push({
+      pathname: '/(tabs)/playlists/[id]',
+      params: { id: playlist.id, from: 'home' },
+    });
   };
 
   return (

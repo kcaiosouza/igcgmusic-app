@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import {
   BookOpen,
   Clock,
@@ -682,6 +683,13 @@ export default function SearchScreen() {
                     ).map((p: SearchPlaylist) => (
                       <Pressable
                         key={p.id}
+                        onPress={() => {
+                          if (!p.id) return;
+                          router.push({
+                            pathname: '/(tabs)/playlists/[id]',
+                            params: { id: p.id, from: 'search' },
+                          });
+                        }}
                         style={[
                           styles.playlistCard,
                           {

@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import {
   Check,
+  FolderPlus,
   Heart,
   ListEnd,
   ListPlus,
@@ -17,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AddToPlaylistModal from '@/components/player/add-to-playlist-modal';
 import { Colors, Fonts } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { usePlayer } from '@/contexts/player-context';
@@ -39,6 +41,7 @@ export default function TrackActionsModal({
   const { play, addToQueueNext, addToQueueEnd } = usePlayer();
   const { likedTracks, toggleLike } = useAuth();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
 
   if (!track) return null;
 
@@ -212,10 +215,35 @@ export default function TrackActionsModal({
                   </Text>
                 </View>
               </Pressable>
+
+              {/* Salvar na Playlist */}
+              <Pressable
+                onPress={() => setIsAddToPlaylistOpen(true)}
+                style={({ pressed }) => [
+                  styles.actionRow,
+                  pressed && styles.actionRowPressed,
+                ]}>
+                <View style={styles.actionIconContainer}>
+                  <FolderPlus size={18} color="rgba(255, 255, 255, 0.8)" />
+                </View>
+                <View style={styles.actionTextCol}>
+                  <Text style={styles.actionTitle}>Salvar na Playlist</Text>
+                  <Text style={styles.actionSubtitle}>
+                    Adicione à uma playlist personalizada
+                  </Text>
+                </View>
+              </Pressable>
             </View>
           )}
         </SafeAreaView>
       </View>
+
+      <AddToPlaylistModal
+        track={track}
+        visible={isAddToPlaylistOpen}
+        onClose={() => setIsAddToPlaylistOpen(false)}
+        onSuccess={(name) => showToast(`Salvo em "${name}"`)}
+      />
     </Modal>
   );
 }

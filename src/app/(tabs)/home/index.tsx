@@ -607,11 +607,22 @@ export default function HomeScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.horizontalCardsScroll}>
                   {feed.topArtists.slice(0, 10).map((artist: Author) => (
-                    <View
+                    <Pressable
                       key={artist.id}
-                      style={[
+                      onPress={() => {
+                        if (!artist.id) return;
+                        router.push({
+                          pathname: '/(tabs)/home/artist/[id]' as any,
+                          params: { id: artist.id, name: artist.name },
+                        });
+                      }}
+                      style={({ pressed }) => [
                         styles.artistCard,
-                        { backgroundColor: colors.card, borderColor: colors.borderSubtle },
+                        {
+                          backgroundColor: colors.card,
+                          borderColor: colors.borderSubtle,
+                        },
+                        pressed && styles.itemPressed,
                       ]}>
                       <Image
                         source={{ uri: artist.avatarUrl || DEFAULT_COVER }}
@@ -631,7 +642,7 @@ export default function HomeScreen() {
                         numberOfLines={1}>
                         {formatNumber(artist.listeners)} ouvintes
                       </Text>
-                    </View>
+                    </Pressable>
                   ))}
                 </ScrollView>
               </View>

@@ -81,6 +81,8 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
       />
       <Stack.Screen name="+not-found" options={{ headerShown: false }} />
       <Stack.Screen name="404" options={{ headerShown: false }} />
+      <Stack.Screen name="artist/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="album/[id]" options={{ headerShown: false }} />
     </Stack>
   );
 }

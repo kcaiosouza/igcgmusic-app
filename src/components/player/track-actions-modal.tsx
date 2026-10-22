@@ -1,11 +1,14 @@
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import {
   Check,
+  Disc3,
   FolderPlus,
   Heart,
   ListEnd,
   ListPlus,
   Play,
+  User,
   X,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
@@ -77,6 +80,27 @@ export default function TrackActionsModal({
   const handleAddToEnd = () => {
     addToQueueEnd(track);
     showToast('Adicionado ao fim da fila');
+  };
+
+  const handleGoToArtist = () => {
+    if (!track) return;
+    const artistKey = track.authorId || track.members;
+    if (artistKey) {
+      onClose();
+      router.push({
+        pathname: '/(tabs)/home/artist/[id]' as any,
+        params: { id: artistKey, name: track.members },
+      });
+    }
+  };
+
+  const handleGoToAlbum = () => {
+    if (!track?.albumId || track.albumId === 'no-album') return;
+    onClose();
+    router.push({
+      pathname: '/(tabs)/home/album/[id]' as any,
+      params: { id: track.albumId, title: track.albumName || 'Álbum' },
+    });
   };
 
   return (
@@ -233,6 +257,46 @@ export default function TrackActionsModal({
                   </Text>
                 </View>
               </Pressable>
+
+              {/* Ir para o Artista */}
+              {Boolean(track.authorId || track.members) && (
+                <Pressable
+                  onPress={handleGoToArtist}
+                  style={({ pressed }) => [
+                    styles.actionRow,
+                    pressed && styles.actionRowPressed,
+                  ]}>
+                  <View style={styles.actionIconContainer}>
+                    <User size={18} color="rgba(255, 255, 255, 0.8)" />
+                  </View>
+                  <View style={styles.actionTextCol}>
+                    <Text style={styles.actionTitle}>Ir para o Artista</Text>
+                    <Text style={styles.actionSubtitle}>
+                      {track.members || 'Ver catálogo e álbuns'}
+                    </Text>
+                  </View>
+                </Pressable>
+              )}
+
+              {/* Ir para o Álbum */}
+              {Boolean(track.albumId && track.albumId !== 'no-album') && (
+                <Pressable
+                  onPress={handleGoToAlbum}
+                  style={({ pressed }) => [
+                    styles.actionRow,
+                    pressed && styles.actionRowPressed,
+                  ]}>
+                  <View style={styles.actionIconContainer}>
+                    <Disc3 size={18} color="rgba(255, 255, 255, 0.8)" />
+                  </View>
+                  <View style={styles.actionTextCol}>
+                    <Text style={styles.actionTitle}>Ir para o Álbum</Text>
+                    <Text style={styles.actionSubtitle}>
+                      {track.albumName || 'Ver faixas do álbum'}
+                    </Text>
+                  </View>
+                </Pressable>
+              )}
             </View>
           )}
         </SafeAreaView>

@@ -560,12 +560,20 @@ export default function SearchScreen() {
                   ).map((album: SearchAlbum) => (
                     <Pressable
                       key={album.id}
-                      style={[
+                      onPress={() => {
+                        if (!album.id) return;
+                        router.push({
+                          pathname: '/(tabs)/home/album/[id]' as any,
+                          params: { id: album.id, title: album.title },
+                        });
+                      }}
+                      style={({ pressed }) => [
                         styles.albumCard,
                         {
                           backgroundColor: theme.card,
                           borderColor: theme.border,
                         },
+                        pressed && styles.cardPressed,
                       ]}>
                       <Image
                         source={{ uri: album.thumbnailUrl || DEFAULT_COVER }}
@@ -620,12 +628,20 @@ export default function SearchScreen() {
                   ).map((artist: SearchArtist) => (
                     <Pressable
                       key={artist.id}
-                      style={[
+                      onPress={() => {
+                        if (!artist.id) return;
+                        router.push({
+                          pathname: '/(tabs)/home/artist/[id]' as any,
+                          params: { id: artist.id, name: artist.name },
+                        });
+                      }}
+                      style={({ pressed }) => [
                         styles.artistCard,
                         {
                           backgroundColor: theme.card,
                           borderColor: theme.border,
                         },
+                        pressed && styles.cardPressed,
                       ]}>
                       <Image
                         source={{

@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import {
   AlertCircle,
   Check,
@@ -13,7 +14,7 @@ import {
   Trash2,
   User as UserIcon,
 } from 'lucide-react-native';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -740,6 +741,24 @@ export default function ProfileScreen() {
                 mode="cards"
               />
             </View>
+
+            {/* CODIGO APENAS PARA TESTAR ROTAS INEXISTENTES */}
+            <Pressable
+              onPress={() => router.push('/rota-inexistente-teste' as any)}
+              style={({ pressed }) => [
+                styles.testRouteButton,
+                {
+                  backgroundColor: theme.cardSecondary,
+                  borderColor: theme.border,
+                },
+                pressed && styles.buttonPressed,
+              ]}>
+              <AlertCircle size={18} color={theme.textSecondary} />
+              <Text style={[styles.testRouteButtonText, { color: theme.text }]}>
+                Testar tela 404 (Rota Inexistente)
+              </Text>
+            </Pressable>
+
           </View>
         )}
 
@@ -1369,5 +1388,21 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.85,
     transform: [{ scale: 0.98 }],
+  },
+  testRouteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    marginTop: 8,
+  },
+  testRouteButtonText: {
+    fontFamily: Fonts.medium,
+    fontSize: 14,
   },
 });

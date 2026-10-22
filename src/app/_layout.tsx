@@ -41,11 +41,19 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
   useEffect(() => {
     if (!isAppReady) return;
 
-    const inTabsGroup = segments[0] === '(tabs)';
+    const firstSegment = (segments as string[])[0];
+    const isPublicScreen = firstSegment === '+not-found' || firstSegment === '404';
+    if (isPublicScreen) return;
 
-    if (isAuthenticated && !inTabsGroup) {
+    const inAuthGroup =
+      firstSegment === '(auth)' ||
+      firstSegment === 'login' ||
+      firstSegment === 'signup' ||
+      !firstSegment;
+
+    if (isAuthenticated && inAuthGroup) {
       router.replace('/home');
-    } else if (!isAuthenticated && inTabsGroup) {
+    } else if (!isAuthenticated && !inAuthGroup) {
       router.replace('/');
     }
   }, [isAuthenticated, isAppReady, segments, router]);
@@ -71,6 +79,8 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
           animation: 'fade',
         }}
       />
+      <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+      <Stack.Screen name="404" options={{ headerShown: false }} />
     </Stack>
   );
 }

@@ -193,7 +193,7 @@ function CustomAndroidTabBar({
                 canPreventDefault: true,
               });
 
-              if (!isFocused && !event.defaultPrevented) {
+              if (!event.defaultPrevented) {
                 navigateToTab(route.key);
               }
             };

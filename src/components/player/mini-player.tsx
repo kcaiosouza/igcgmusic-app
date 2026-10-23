@@ -35,10 +35,10 @@ export default function MiniPlayer() {
     return null;
   }
 
-  // Altura da tab nativa adaptada por plataforma para fixar perfeitamente em cima
+  // Altura da tab adaptada por plataforma para fixar perfeitamente em cima
   const bottomOffset = Platform.select({
     ios: 49 + insets.bottom + 10,
-    android: (insets.bottom > 0 ? insets.bottom : 8) + 64 + 10,
+    android: (insets.bottom > 0 ? insets.bottom : 8) + 86,
     default: 64 + insets.bottom + 10,
   });
 

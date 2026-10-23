@@ -548,7 +548,9 @@ export default function PlaylistDetailsScreen() {
         visible={isEditModalVisible}
         animationType="fade"
         transparent
-        onRequestClose={() => !isSavingEdit && setIsEditModalVisible(false)}>
+        onRequestClose={() => {
+          if (!isSavingEdit) setIsEditModalVisible(false);
+        }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalOverlay}>

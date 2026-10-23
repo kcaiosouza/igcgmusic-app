@@ -532,7 +532,9 @@ export default function PlaylistsScreen() {
         visible={isModalVisible}
         animationType="fade"
         transparent
-        onRequestClose={() => !isCreating && setIsModalVisible(false)}>
+        onRequestClose={() => {
+          if (!isCreating) setIsModalVisible(false);
+        }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalOverlay}>

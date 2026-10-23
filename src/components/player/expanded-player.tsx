@@ -95,7 +95,7 @@ export default function ExpandedPlayer() {
   // Scrubber fluido em tempo real
   const [isScrubbing, setIsScrubbing] = useState<boolean>(false);
   const [scrubPercent, setScrubPercent] = useState<number>(0);
-  const scrubberRef = useRef<View | null>(null);
+  const scrubberRef = useRef<React.ElementRef<typeof View> | null>(null);
   const scrubberLayout = useRef<{ x: number; width: number }>({
     x: 24,
     width: SCREEN_WIDTH - 48,
